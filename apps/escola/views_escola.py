@@ -14,6 +14,8 @@ def listar_escolas_view(request):
         'escolas': escolas
     }, safe=False)
 
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def criar_escola_view(request):
@@ -25,6 +27,8 @@ def criar_escola_view(request):
         'mensagem': f"escola '{escola['nome_escola']}' criada com sucesso",
         'escola': escola
     }, status=201)
+
+
 
 @csrf_exempt
 @require_http_methods(["PUT", "PATCH"])

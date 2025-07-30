@@ -1,12 +1,12 @@
 from ..models import Questionario_coleta_escolar
-from django.core.exceptions import ObjectDoesNotExist
 from apps.escola.models import Escola
 from django.db.models import Sum
-from django.db.models import F, IntegerField, ExpressionWrapper
+from django.db.models import F, IntegerField, ExpressionWrapper,Max
 from datetime import datetime
+from django.db import transaction
 
-from datetime import datetime
 
+@transaction.atomic
 def criar_coleta(data):
     nome_escola = data.get("escola")
     if not nome_escola:
@@ -15,17 +15,17 @@ def criar_coleta(data):
     try:
         escola = Escola.objects.only("id").get(nome_escola=nome_escola)
     except Escola.DoesNotExist:
-        return None, f"escola com nome '{nome_escola}' não encontrada."
-
+        return None, f"escola com nome '{nome_escola}' nao encontrada."
 
     data_str = data.get("data")
     if isinstance(data_str, str):
         try:
             data_convertida = datetime.strptime(data_str, "%Y-%m-%d").date()
         except ValueError:
-            return None, f"data '{data_str}' inválida, use o formato YYYY-MM-DD"
+            return None, f"data '{data_str}' invalida, use o formato YYYY-MM-DD"
     else:
         data_convertida = data_str
+
     def parse_time(horario):
         if isinstance(horario, str):
             try:
@@ -68,8 +68,10 @@ def criar_coleta(data):
             cpf_responsavel=data.get("cpf_responsavel"),
         )
         return coleta, None
+
     except Exception as e:
         return None, f"erro ao criar coleta: {e}"
+    
 
 def deletar_coleta(coleta_id):
     try:
@@ -136,12 +138,19 @@ def editar_coleta(id, data):
 
     
 
-def listar_totais_por_escola_paginado(page=1, page_size=1777): 
+def listar_totais_por_escola_paginado(page=1, page_size=1777):
     offset = (page - 1) * page_size
     limit = offset + page_size
 
+  
+    pontos_expr = (
+        F("bag_plastico") + F("bag_papel") + F("bag_aluminio") +
+        F("bag_eletronico") + F("bag_vazio") + F("bag_semi_cheio") + F("bag_cheio")
+    )
+
     qs = (
         Questionario_coleta_escolar.objects
+        .annotate(pontos=ExpressionWrapper(pontos_expr, output_field=IntegerField()))
         .values("escola__nome_escola")
         .annotate(
             bag_plastico_total=Sum("bag_plastico"),
@@ -151,23 +160,14 @@ def listar_totais_por_escola_paginado(page=1, page_size=1777):
             bag_vazio_total=Sum("bag_vazio"),
             bag_semi_cheio_total=Sum("bag_semi_cheio"),
             bag_cheio_total=Sum("bag_cheio"),
+            pontos_total=Sum("pontos"),
+            data_mais_recente=Max("data"),  
         )
-        .order_by("escola__nome_escola")
+        .order_by("-data_mais_recente")  #
     )
 
-    total_escolas = qs.count()
+    total_escolas = len(qs)
     escolas_page = list(qs[offset:limit])
-
-    for e in escolas_page:
-        e["pontos_total"] = sum([
-            e.get("bag_plastico_total") or 0,
-            e.get("bag_papel_total") or 0,
-            e.get("bag_aluminio_total") or 0,
-            e.get("bag_eletronico_total") or 0,
-            e.get("bag_vazio_total") or 0,
-            e.get("bag_semi_cheio_total") or 0,
-            e.get("bag_cheio_total") or 0,
-        ])
 
     return {
         "total_escolas": total_escolas,

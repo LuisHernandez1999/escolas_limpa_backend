@@ -1,19 +1,23 @@
 from apps.escola.models import Escola
 from apps.escola.serializer import EscolaSerializer
+from django.db import transaction
 
 def listar_escolas():
     escolas = Escola.objects.all()
     return EscolaSerializer(escolas, many=True).data
 
+@transaction.atomic
 def criar_escola(data):
     nome = data.get('nome_escola')
     if not nome:
-        return None, {'nome_escola': ['este campo e obrigatório.']}
+        return None, {'nome_escola': ['este campo é obrigatório.']}
+
     if Escola.objects.filter(nome_escola__iexact=nome).exists():
-        return None, {'nome_escola': ['ja existe uma escola com esse nome.']}
+        return None, {'nome_escola': ['já existe uma escola com esse nome.']}
 
     escola = Escola.objects.create(nome_escola=nome)
     return {'id': escola.id, 'nome_escola': escola.nome_escola}, None
+
 
 def atualizar_escola(id, data):
     try:
