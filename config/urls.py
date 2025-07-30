@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.urls import path
 from apps.escola.views_escola import listar_escolas_view, criar_escola_view, atualizar_escola_view, deletar_escola_view
-from apps.questionario.views_questionario import listar_totais_por_escola_view,criar_coleta_view,deletar_coleta_view,top_10_escolas_view,bottom_5_escolas_view,editar_coleta_view
+from apps.questionario.views_questionario import listar_totais_por_escola_view,criar_coleta_view,deletar_coleta_view,top_10_escolas_view,bottom_5_escolas_view,editar_coleta_view,ranking_escolas_pontos_view
 
 urlpatterns = [
     path('api/escolas/', listar_escolas_view, name='listar_escolas'),
@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/form/<int:id>/editar_coleta/',editar_coleta_view,name='editar_coleta'),
     path('api/form/<int:id>/deletar_coleta/',deletar_coleta_view,name='deletar'),
     path('api/form/top_10/',top_10_escolas_view,name='top_10'),
-    path('api/form/bottom_5/',bottom_5_escolas_view,name='top_5_piores')
+    path('api/form/bottom_5/',bottom_5_escolas_view,name='top_5_piores'),
+    path('api/form/ranking/',ranking_escolas_pontos_view,name='ranking_escolas_pontos')
 ]
 

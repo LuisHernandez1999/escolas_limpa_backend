@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpResponseBadRequest,HttpResponseNotAllo
 from django.views.decorators.csrf import csrf_exempt
 from .service_questionario_escolar.escolar_questionario_service import criar_coleta,deletar_coleta,editar_coleta,listar_totais_por_escola_paginado,top_10_escolas_mais_pontos,bottom_5_escolas_menos_pontos
 import json
+from .service_questionario_escolar.escolar_questionario_service import ranking_escolas_pontos
 
 
 @csrf_exempt  
@@ -107,3 +108,8 @@ def top_10_escolas_view(request):
 def bottom_5_escolas_view(request):
     resultado = bottom_5_escolas_menos_pontos()
     return JsonResponse({"bottom_5_escolas": resultado}, status=200)
+
+@csrf_exempt
+def ranking_escolas_pontos_view(request):
+    resultado = ranking_escolas_pontos()
+    return JsonResponse(resultado, safe=False)
