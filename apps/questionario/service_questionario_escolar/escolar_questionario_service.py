@@ -226,15 +226,15 @@ def ranking_escolas_pontos():
         Questionario_coleta_escolar.objects
         .values('escola__nome_escola')
         .annotate(total_pontos=Sum(pontos_expr, output_field=IntegerField()))
+        .order_by('-total_pontos')  
     )
 
-    top_10 = qs_agrupado.order_by('-total_pontos')[:10]
     bottom_5 = qs_agrupado.order_by('total_pontos')[:5]
 
     return {
         "top_10_escolas": [
             {"escola_nome": item["escola__nome_escola"], "pontos": item["total_pontos"]}
-            for item in top_10
+            for item in qs_agrupado 
         ],
         "bottom_5_escolas": [
             {"escola_nome": item["escola__nome_escola"], "pontos": item["total_pontos"]}
